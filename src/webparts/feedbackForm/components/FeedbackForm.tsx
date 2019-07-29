@@ -8,26 +8,45 @@ import {
 } from 'office-ui-fabric-react';
 import * as MicrosoftGraph from '@microsoft/microsoft-graph-types';
 
-export default class FeedbackForm extends React.Component<IFeedbackFormProps, {}> {
+export interface IFeedbackFormState {
+  isBusy: boolean;
+}
+
+export default class FeedbackForm extends React.Component<IFeedbackFormProps, IFeedbackFormState> {
+
+  constructor(props){
+    super(props);
+
+    this.state = {
+      isBusy: false
+    };
+  }
 
   public render(): React.ReactElement<IFeedbackFormProps> {
-    console.log(this.props.graphClient);
 
     return (
       <div className={ styles.feedbackForm }>
         <TextField label="Standard" multiline rows={3} name="text" />
-        <DefaultButton onClick={this._sendMessage}>Send</DefaultButton>
+        <DefaultButton disabled={this.state.isBusy} onClick={() => {this._sendMessage();}}>Send</DefaultButton>
       </div>
     );
   }
 
-  private async _sendMessage() {
+  private _me():void {
+    this.props.graphClient.api('/me')
+    .get((error, user: MicrosoftGraph.User, rawResponse?: any) => {
+      console.log(user);
+    });
+  }
+
+  private _sendMessage() {
+    this.setState({isBusy:true});
 
     const message = {
       subject:"Did you see last night's game?",
-      importance:"Low",
+      importance:"low",
       body:{
-          contentType:"HTML",
+          contentType:"html",
           content:"They were <b>awesome</b>!"
       },
       toRecipients:[
@@ -37,10 +56,14 @@ export default class FeedbackForm extends React.Component<IFeedbackFormProps, {}
               }
           }
       ]
-  };
+  } as MicrosoftGraph.Message;
 
-  let res = await this.props.graphClient.api('/me/messages')
-    .post({message : message});
+  this.props.graphClient.api('/me/sendMail')
+    .post({message : message}).then((value:any) => {
+      this.setState({isBusy:false});
+    },(error: any) => {
+      console.log(error);
+    });
   }
 
 }

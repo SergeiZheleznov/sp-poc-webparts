@@ -1,4 +1,4 @@
-import { MSGraphClient } from "@microsoft/sp-http";
+import { MSGraphClient } from '@microsoft/sp-http';
 
 export interface IFeedbackFormProps {
   description: string;

@@ -18,50 +18,27 @@ export interface IFeedbackFormWebPartProps {
 }
 
 export default class FeedbackFormWebPart extends BaseClientSideWebPart<IFeedbackFormWebPartProps> {
-  private graphClient: MSGraphClient;
+  private _graphClient: MSGraphClient;
 
-  public async onInit(): Promise<void> {
-    console.log('init');
-    return;
+  public onInit(): Promise<void> {
+    return new Promise<void>((resolve: () => void, reject: (error: any) => void ): void => {
+      this.context.msGraphClientFactory
+        .getClient()
+        .then((cli: MSGraphClient): void => {
+          this._graphClient = cli;
+          resolve();
+        }, err => reject(err));
+    });
   }
 
 
   public render(): void {
-    this.context.msGraphClientFactory
-    .getClient()
-    .then((client: MSGraphClient): void => {
-        this.graphClient = client;
-        console.log(client);
-
-      let res = client.api('/me/sendMail')
-        .post({
-          "message": {
-            "subject": "Meet for lunch?",
-            "body": {
-              "contentType": "Text",
-              "content": "The new cafeteria is open."
-            },
-            "toRecipients": [
-              {
-                "emailAddress": {
-                  "address": "sksdes@zx0.onmicrosoft.com"
-                }
-              }
-            ]
-          }
-        }).then((value)=>{
-          console.log(value);
-        },(error) => {
-          console.log(error);
-        });
-
-    });
 
     const element: React.ReactElement<IFeedbackFormProps > = React.createElement(
       FeedbackForm,
       {
         description: this.properties.description,
-        graphClient: this.graphClient
+        graphClient: this._graphClient
       }
     );
 
@@ -69,7 +46,7 @@ export default class FeedbackFormWebPart extends BaseClientSideWebPart<IFeedback
   }
 
   protected onDispose(): void {
-    ReactDom.unmountComponentAtNode(this.domElement);
+    //ReactDom.unmountComponentAtNode(this.domElement);
   }
 
   protected get dataVersion(): Version {
