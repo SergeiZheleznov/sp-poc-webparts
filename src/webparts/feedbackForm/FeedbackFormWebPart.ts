@@ -14,10 +14,11 @@ import { MSGraphClient } from '@microsoft/sp-http';
 import * as MicrosoftGraph from '@microsoft/microsoft-graph-types';
 
 export interface IFeedbackFormWebPartProps {
-  description: string;
+  targetEmail: string;
 }
 
 export default class FeedbackFormWebPart extends BaseClientSideWebPart<IFeedbackFormWebPartProps> {
+
   private _graphClient: MSGraphClient;
 
   public onInit(): Promise<void> {
@@ -37,8 +38,8 @@ export default class FeedbackFormWebPart extends BaseClientSideWebPart<IFeedback
     const element: React.ReactElement<IFeedbackFormProps > = React.createElement(
       FeedbackForm,
       {
-        description: this.properties.description,
-        graphClient: this._graphClient
+        graphClient: this._graphClient,
+        targetEmail: this.properties.targetEmail
       }
     );
 
@@ -46,7 +47,7 @@ export default class FeedbackFormWebPart extends BaseClientSideWebPart<IFeedback
   }
 
   protected onDispose(): void {
-    //ReactDom.unmountComponentAtNode(this.domElement);
+    ReactDom.unmountComponentAtNode(this.domElement);
   }
 
   protected get dataVersion(): Version {
@@ -64,9 +65,9 @@ export default class FeedbackFormWebPart extends BaseClientSideWebPart<IFeedback
             {
               groupName: strings.BasicGroupName,
               groupFields: [
-                PropertyPaneTextField('description', {
-                  label: strings.DescriptionFieldLabel
-                })
+                PropertyPaneTextField('targetEmail', {
+                  label: strings.TargetEmailFieldLabel
+                }),
               ]
             }
           ]

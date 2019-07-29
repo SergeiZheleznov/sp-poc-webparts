@@ -10,6 +10,7 @@ import * as MicrosoftGraph from '@microsoft/microsoft-graph-types';
 
 export interface IFeedbackFormState {
   isBusy: boolean;
+  message: string;
 }
 
 export default class FeedbackForm extends React.Component<IFeedbackFormProps, IFeedbackFormState> {
@@ -18,7 +19,8 @@ export default class FeedbackForm extends React.Component<IFeedbackFormProps, IF
     super(props);
 
     this.state = {
-      isBusy: false
+      isBusy: false,
+      message: ''
     };
   }
 
@@ -26,41 +28,43 @@ export default class FeedbackForm extends React.Component<IFeedbackFormProps, IF
 
     return (
       <div className={ styles.feedbackForm }>
-        <TextField label="Standard" multiline rows={3} name="text" />
-        <DefaultButton disabled={this.state.isBusy} onClick={() => {this._sendMessage();}}>Send</DefaultButton>
+        <TextField label="Feedback" multiline rows={3} name="text" value={this.state.message} onChange={this._onChange} />
+        <DefaultButton disabled={this.state.isBusy} onClick={this._sendMessage}>Send</DefaultButton>
       </div>
     );
   }
 
-  private _me():void {
-    this.props.graphClient.api('/me')
-    .get((error, user: MicrosoftGraph.User, rawResponse?: any) => {
-      console.log(user);
-    });
+  private _onChange = (event: React.ChangeEvent<HTMLInputElement>) : void => {
+    this.setState({message:event.target.value});
   }
 
-  private _sendMessage() {
+  private _sendMessage = (event: React.MouseEvent<HTMLButtonElement, MouseEvent>) : void => {
     this.setState({isBusy:true});
 
-    const message = {
+    const msg = {
       subject:"Did you see last night's game?",
       importance:"low",
       body:{
-          contentType:"html",
-          content:"They were <b>awesome</b>!"
+          contentType:"text",
+          content: this.state.message
       },
       toRecipients:[
           {
               emailAddress:{
-                  address:"sksdes@zx0.onmicrosoft.com"
+                  address: this.props.targetEmail
               }
           }
       ]
   } as MicrosoftGraph.Message;
 
   this.props.graphClient.api('/me/sendMail')
-    .post({message : message}).then((value:any) => {
-      this.setState({isBusy:false});
+    .post({
+      message : msg
+    }).then((value:any) => {
+      this.setState({
+        isBusy:false,
+        message: ''
+      });
     },(error: any) => {
       console.log(error);
     });
