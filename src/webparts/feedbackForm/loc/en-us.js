@@ -3,6 +3,8 @@ define([], function() {
     "PropertyPaneDescription": "Description",
     "BasicGroupName": "Group Name",
     "DescriptionFieldLabel": "Description Field",
-    "TargetEmailFieldLabel": "Target Email"
+    "TargetEmailFieldLabel": "Target Email",
+    "MessageSubjectFieldLabel": "Subject"
+
   }
 });

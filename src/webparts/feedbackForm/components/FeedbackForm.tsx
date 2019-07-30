@@ -4,13 +4,18 @@ import { IFeedbackFormProps } from './IFeedbackFormProps';
 import { escape } from '@microsoft/sp-lodash-subset';
 import {
   TextField,
-  DefaultButton
+  DefaultButton,
+  MessageBar,
+  MessageBarType,
+  MessageBarButton
 } from 'office-ui-fabric-react';
 import * as MicrosoftGraph from '@microsoft/microsoft-graph-types';
+
 
 export interface IFeedbackFormState {
   isBusy: boolean;
   message: string;
+  messageSended: boolean;
 }
 
 export default class FeedbackForm extends React.Component<IFeedbackFormProps, IFeedbackFormState> {
@@ -20,16 +25,39 @@ export default class FeedbackForm extends React.Component<IFeedbackFormProps, IF
 
     this.state = {
       isBusy: false,
-      message: ''
+      message: '',
+      messageSended: false
     };
   }
 
   public render(): React.ReactElement<IFeedbackFormProps> {
-
     return (
       <div className={ styles.feedbackForm }>
-        <TextField label="Feedback" multiline rows={3} name="text" value={this.state.message} onChange={this._onChange} />
-        <DefaultButton disabled={this.state.isBusy} onClick={this._sendMessage}>Send</DefaultButton>
+        {this.state.messageSended ? (
+          <MessageBar
+            actions={
+              <div>
+                <MessageBarButton onClick={()=>{
+                  this.setState({
+                    messageSended:false
+                  });
+                }}>I want to send more!</MessageBarButton>
+              </div>
+            }
+            messageBarType={MessageBarType.success}
+            isMultiline={false}
+          >
+            Message was sent!
+          </MessageBar>
+        ) :
+        (
+            <>
+              <TextField disabled={this.state.isBusy} label="Feedback" multiline rows={3} name="text" value={this.state.message} onChange={this._onChange} />
+              <div className={ styles.formActions }>
+                <DefaultButton disabled={this.state.isBusy} onClick={this._sendMessage}>Send</DefaultButton>
+              </div>
+            </>
+        )}
       </div>
     );
   }
@@ -38,15 +66,15 @@ export default class FeedbackForm extends React.Component<IFeedbackFormProps, IF
     this.setState({message:event.target.value});
   }
 
-  private _sendMessage = (event: React.MouseEvent<HTMLButtonElement, MouseEvent>) : void => {
+  private _sendMessage = async (event: React.MouseEvent<HTMLButtonElement, MouseEvent>) : Promise<void> => {
     this.setState({isBusy:true});
 
     const msg = {
-      subject:"Did you see last night's game?",
+      subject: escape(this.props.messageSubject),
       importance:"low",
       body:{
-          contentType:"text",
-          content: this.state.message
+          contentType:"html",
+          content: escape(this.state.message)
       },
       toRecipients:[
           {
@@ -57,13 +85,14 @@ export default class FeedbackForm extends React.Component<IFeedbackFormProps, IF
       ]
   } as MicrosoftGraph.Message;
 
-  this.props.graphClient.api('/me/sendMail')
+  await this.props.graphClient.api('/me/sendMail')
     .post({
       message : msg
-    }).then((value:any) => {
+    }).then(() => {
       this.setState({
         isBusy:false,
-        message: ''
+        message: '',
+        messageSended: true
       });
     },(error: any) => {
       console.log(error);

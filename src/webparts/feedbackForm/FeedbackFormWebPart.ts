@@ -2,19 +2,19 @@ import * as React from 'react';
 import * as ReactDom from 'react-dom';
 import { Version } from '@microsoft/sp-core-library';
 import { BaseClientSideWebPart } from '@microsoft/sp-webpart-base';
-import {
-  IPropertyPaneConfiguration,
-  PropertyPaneTextField
-} from '@microsoft/sp-property-pane';
-
 import * as strings from 'FeedbackFormWebPartStrings';
 import FeedbackForm from './components/FeedbackForm';
 import { IFeedbackFormProps } from './components/IFeedbackFormProps';
 import { MSGraphClient } from '@microsoft/sp-http';
-import * as MicrosoftGraph from '@microsoft/microsoft-graph-types';
+import {
+  IPropertyPaneConfiguration,
+  PropertyPaneTextField
+} from '@microsoft/sp-property-pane';
+import { DisplayMode } from '@microsoft/sp-core-library';
 
 export interface IFeedbackFormWebPartProps {
   targetEmail: string;
+  messageSubject: string;
 }
 
 export default class FeedbackFormWebPart extends BaseClientSideWebPart<IFeedbackFormWebPartProps> {
@@ -35,11 +35,16 @@ export default class FeedbackFormWebPart extends BaseClientSideWebPart<IFeedback
 
   public render(): void {
 
+    if (this.displayMode == DisplayMode.Edit) {
+      // TODO: Add edit mode view
+    }
+
     const element: React.ReactElement<IFeedbackFormProps > = React.createElement(
       FeedbackForm,
       {
         graphClient: this._graphClient,
-        targetEmail: this.properties.targetEmail
+        targetEmail: this.properties.targetEmail,
+        messageSubject: this.properties.messageSubject
       }
     );
 
@@ -68,6 +73,9 @@ export default class FeedbackFormWebPart extends BaseClientSideWebPart<IFeedback
                 PropertyPaneTextField('targetEmail', {
                   label: strings.TargetEmailFieldLabel
                 }),
+                PropertyPaneTextField('messageSubject', {
+                  label: strings.MessageSubjectFieldLabel
+                })
               ]
             }
           ]
